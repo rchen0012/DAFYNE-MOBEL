@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calculadora de Preços · 定价小助手</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #a8e6cf, #80cbc4, #4db6ac);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 12px 10px 20px;
+        }
+
+        .card {
+            max-width: 420px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            border-radius: 28px;
+            box-shadow: 0 12px 40px rgba(0, 150, 136, 0.15), 0 4px 16px rgba(0, 150, 136, 0.08);
+            padding: 18px 16px 22px;
+            transition: 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        /* ===== 顶部：双Logo + 品牌 + 语言切换 ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .logos {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .logo-area {
+            width: 60px;
+            height: 24px;
+            border-radius: 6px;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .logo-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .logo-area img.error {
+            display: none;
+        }
+        .logo-area img.error+.logo-fallback {
+            display: flex;
+        }
+
+        .logo-fallback {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #004d40;
+            background: rgba(0, 150, 136, 0.08);
+            border-radius: 6px;
+            border: 1px dashed #26a69a;
+        }
+
+        .logo-divider {
+            width: 1.5px;
+            height: 20px;
+            background: rgba(0, 150, 136, 0.15);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .brand-text .title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #004d40;
+            letter-spacing: -0.2px;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .brand-text .subtitle {
+            font-size: 0.55rem;
+            color: #00695c;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            opacity: 0.8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lang-toggle {
+            display: flex;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 3px;
+            border-radius: 30px;
+            border: 1px solid rgba(0, 150, 136, 0.12);
+            flex-shrink: 0;
+        }
+
+        .lang-toggle button {
+            background: transparent;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 24px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #00695c;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .lang-toggle button.active {
+            background: linear-gradient(135deg, #26a69a, #00897b);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 150, 136, 0.2);
+        }
+
+        .lang-toggle button:hover:not(.active) {
+            background: rgba(0, 150, 136, 0.06);
+        }
+
+        /* ===== 控制区 ===== */
+        .control-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 14px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .field {
+            width: 100%;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #004d40;
+            margin-bottom: 3px;
+        }
+
+        .field select,
+        .field input {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            background: white;
+            border: 1px solid rgba(0, 150, 136, 0.12);
+            border-radius: 24px;
+            outline: none;
+            transition: 0.2s;
+            color: #1a1a2e;
+            font-weight: 500;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .field select:focus,
+        .field input:focus {
+            border-color: #26a69a;
+            box-shadow: 0 0 0 3px rgba(38, 166, 154, 0.10);
+        }
+
+        .field .unit-hint {
+            font-size: 0.5rem;
+            color: #00695c;
+            margin-top: 3px;
+            display: block;
+            font-weight: 400;
+            opacity: 0.7;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 4px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #26a69a, #00897b);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 3px 10px rgba(0, 150, 136, 0.15);
+            letter-spacing: 0.2px;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-outline {
+            background: rgba(0, 150, 136, 0.08);
+            color: #004d40;
+            box-shadow: none;
+            border: 1px solid rgba(0, 150, 136, 0.12);
+        }
+
+        .btn-outline:active {
+            background: rgba(0, 150, 136, 0.15);
+        }
+
+        /* ===== 单位换算信息 ===== */
+        .unit-info {
+            background: linear-gradient(135deg, rgba(38, 166, 154, 0.06), rgba(0, 137, 123, 0.04));
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.7rem;
+            color: #004d40;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+            border: 1px solid rgba(38, 166, 154, 0.06);
+            justify-content: center;
+        }
+
+        .unit-info .single-cost {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #00695c;
+        }
+        .unit-info .original-cost {
+            font-size: 0.65rem;
+            color: #00695c;
+            opacity: 0.7;
+        }
+        .unit-info .original-cost .orig-val {
+            text-decoration: line-through;
+            font-weight: 500;
+        }
+
+        /* ===== 四档卡片 ===== */
+        .quadrant {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 0 0 14px 0;
+        }
+
+        .level-card {
+            border-radius: 20px;
+            padding: 14px 8px 12px;
+            text-align: center;
+            border: 2px solid rgba(0, 150, 136, 0.08);
+            transition: 0.2s;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .level-card:active {
+            transform: scale(0.97);
+        }
+
+        /* ===== A档 橙色 ===== */
+        .level-card.orange {
+            background: linear-gradient(145deg, #fffbeb, #fef3c7);
+            border-color: #f59e0b;
+            box-shadow: 0 2px 12px rgba(245, 158, 11, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        .level-card.orange::before {
+            content: '◆';
+            position: absolute;
+            top: -4px;
+            right: 4px;
+            font-size: 1.2rem;
+            color: rgba(245, 158, 11, 0.12);
+        }
+        .level-card.orange .level-label {
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+            color: white;
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+            font-size: 0.85rem;
+            padding: 0 12px;
+            border-radius: 24px;
+            line-height: 1.7;
+        }
+        .level-card.orange .level-price {
+            color: #92400e;
+            font-size: 1.4rem;
+        }
+        .level-card.orange .level-price .currency {
+            color: #b45309;
+            font-size: 0.8rem;
+        }
+        .level-card.orange .level-multiplier {
+            background: rgba(245, 158, 11, 0.10);
+            color: #92400e;
+            font-size: 0.7rem;
+        }
+        .level-card.orange .level-multiplier .actual {
+            color: #92400e;
+        }
+        .level-card.orange .level-multiplier .original {
+            color: #b45309;
+        }
+        .level-card.orange .level-desc {
+            color: #92400e;
+            font-size: 0.6rem;
+        }
+        .level-card.orange .rule-badge {
+            background: #fde68a;
+            color: #78350f;
+            font-size: 0.55rem;
+            padding: 2px 8px;
+        }
+
+        /* ===== B档 蓝色 ===== */
+        .level-card.blue {
+            background: linear-gradient(145deg, #eff6ff, #dbeafe);
+            border-color: #3b82f6;
+            box-shadow: 0 2px 12px rgba(59, 130, 246, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+        .level-card.blue::before {
+            content: '●';
+            position: absolute;
+            top: -4px;
+            right: 4px;
+            font-size: 1.3rem;
+            color: rgba(59, 130, 246, 0.10);
+        }
+        .level-card.blue .level-label {
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            color: white;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+            font-size: 0.85rem;
+            padding: 0 12px;
+            border-radius: 24px;
+            line-height: 1.7;
+        }
+        .level-card.blue .level-price {
+            color: #1e3a8a;
+            font-size: 1.4rem;
+        }
+        .level-card.blue .level-price .currency {
+            color: #2563eb;
+            font-size: 0.8rem;
+        }
+        .level-card.blue .level-multiplier {
+            background: rgba(59, 130, 246, 0.08);
+            color: #1e3a8a;
+            font-size: 0.7rem;
+        }
+        .level-card.blue .level-multiplier .actual {
+            color: #1e3a8a;
+        }
+        .level-card.blue .level-multiplier .original {
+            color: #3b82f6;
+        }
+        .level-card.blue .level-desc {
+            color: #1e3a8a;
+            font-size: 0.6rem;
+        }
+        .level-card.blue .rule-badge {
+            background: #bfdbfe;
+            color: #1a56db;
+            font-size: 0.55rem;
+            padding: 2px 8px;
+        }
+
+        /* ===== C档 绿色 ===== */
+        .level-card.green {
+            background: linear-gradient(145deg, #ecfdf5, #d1fae5);
+            border-color: #10b981;
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.10);
+            position: relative;
+            overflow: hidden;
+        }
+        .level-card.green::before {
+            content: '▲';
+            position: absolute;
+            top: -4px;
+            right: 4px;
+            font-size: 1.2rem;
+            color: rgba(16, 185, 129, 0.10);
+        }
+        .level-card.green .level-label {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+            font-size: 0.85rem;
+            padding: 0 12px;
+            border-radius: 24px;
+            line-height: 1.7;
+        }
+        .level-card.green .level-price {
+            color: #065f46;
+            font-size: 1.4rem;
+        }
+        .level-card.green .level-price .currency {
+            color: #047857;
+            font-size: 0.8rem;
+        }
+        .level-card.green .level-multiplier {
+            background: rgba(16, 185, 129, 0.08);
+            color: #065f46;
+            font-size: 0.7rem;
+        }
+        .level-card.green .level-multiplier .actual {
+            color: #065f46;
+        }
+        .level-card.green .level-multiplier .original {
+            color: #047857;
+        }
+        .level-card.green .level-desc {
+            color: #065f46;
+            font-size: 0.6rem;
+        }
+        .level-card.green .rule-badge {
+            background: #a7f3d0;
+            color: #064e3b;
+            font-size: 0.55rem;
+            padding: 2px 8px;
+        }
+
+        /* ===== D档 灰色 ===== */
+        .level-card.gray {
+            background: linear-gradient(145deg, #f9fafb, #f3f4f6);
+            border-color: #9ca3af;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+        .level-card.gray::before {
+            content: '■';
+            position: absolute;
+            top: -4px;
+            right: 4px;
+            font-size: 1.2rem;
+            color: rgba(156, 163, 175, 0.12);
+        }
+        .level-card.gray .level-label {
+            background: linear-gradient(135deg, #6b7280, #9ca3af);
+            color: white;
+            box-shadow: 0 2px 6px rgba(156, 163, 175, 0.15);
+            font-size: 0.85rem;
+            padding: 0 12px;
+            border-radius: 24px;
+            line-height: 1.7;
+        }
+        .level-card.gray .level-price {
+            color: #1f2937;
+            font-size: 1.4rem;
+        }
+        .level-card.gray .level-price .currency {
+            color: #4b5563;
+            font-size: 0.8rem;
+        }
+        .level-card.gray .level-multiplier {
+            background: rgba(156, 163, 175, 0.08);
+            color: #1f2937;
+            font-size: 0.7rem;
+        }
+        .level-card.gray .level-multiplier .actual {
+            color: #1f2937;
+        }
+        .level-card.gray .level-multiplier .original {
+            color: #4b5563;
+        }
+        .level-card.gray .level-desc {
+            color: #374151;
+            font-size: 0.6rem;
+        }
+        .level-card.gray .rule-badge {
+            background: #d1d5db;
+            color: #1f2937;
+            font-size: 0.55rem;
+            padding: 2px 8px;
+        }
+
+        /* ===== 通用卡片样式 ===== */
+        .level-label {
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        .level-multiplier {
+            padding: 2px 8px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        .level-multiplier .actual {
+            font-weight: 700;
+        }
+
+        .level-multiplier .original {
+            font-size: 0.55rem;
+            margin-left: 3px;
+        }
+
+        .level-price {
+            font-weight: 700;
+            margin: 4px 0 2px;
+            letter-spacing: 0.2px;
+        }
+
+        .level-price .currency {
+            font-weight: 600;
+            margin-right: 2px;
+        }
+
+        .level-desc {
+            letter-spacing: 0.2px;
+        }
+
+        .rule-badge {
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 3px;
+            max-width: 100%;
+            word-break: break-all;
+        }
+
+        .badge-orange {
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+            color: white;
+            font-size: 0.5rem;
+            padding: 1px 10px;
+            border-radius: 24px;
+            margin-left: 4px;
+            box-shadow: 0 1px 4px rgba(245, 158, 11, 0.2);
+        }
+        .badge-blue {
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            color: white;
+            font-size: 0.5rem;
+            padding: 1px 10px;
+            border-radius: 24px;
+            margin-left: 4px;
+            box-shadow: 0 1px 4px rgba(59, 130, 246, 0.2);
+        }
+        .badge-green {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            font-size: 0.5rem;
+            padding: 1px 10px;
+            border-radius: 24px;
+            margin-left: 4px;
+            box-shadow: 0 1px 4px rgba(16, 185, 129, 0.2);
+        }
+        .badge-gray {
+            background: linear-gradient(135deg, #6b7280, #9ca3af);
+            color: white;
+            font-size: 0.5rem;
+            padding: 1px 10px;
+            border-radius: 24px;
+            margin-left: 4px;
+            box-shadow: 0 1px 4px rgba(156, 163, 175, 0.15);
+        }
+
+        /* ===== 底部 ===== */
+        .footer {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            border-top: 1px solid rgba(0, 150, 136, 0.08);
+            padding-top: 12px;
+            margin-top: 2px;
+            font-size: 0.6rem;
+            color: #004d40;
+        }
+
+        .footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .badge {
+            background: rgba(0, 150, 136, 0.06);
+            border-radius: 30px;
+            padding: 3px 12px;
+            font-weight: 500;
+            color: #004d40;
+            font-size: 0.55rem;
+        }
+
+        .rule-hint {
+            background: rgba(0, 150, 136, 0.06);
+            border-radius: 30px;
+            padding: 3px 12px;
+            font-size: 0.55rem;
+            color: #004d40;
+            text-align: center;
+        }
+
+        /* 双语隐藏 */
+        .zh {
+            display: none;
+        }
+        .pt {
+            display: inline;
+        }
+        body.lang-zh .zh {
+            display: inline;
+        }
+        body.lang-zh .pt {
+            display: none;
+        }
+
+        /* ===== 滚动条美化 ===== */
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 150, 136, 0.3);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <!-- ===== 顶部：双Logo + 品牌 + 语言切换 ===== -->
+        <div class="header">
+            <div class="brand">
+                <div class="logos">
+                    <div class="logo-area" id="logoContainer1">
+                        <img src="images/preview-logo.png" alt="Logo 1" onerror="this.classList.add('error');this.nextElementSibling.style.display='flex'">
+                        <div class="logo-fallback">Logo 1</div>
+                    </div>
+                    <span class="logo-divider"></span>
+                    <div class="logo-area" id="logoContainer2">
+                        <img src="images/preview-logodafyne.png" alt="Logo 2" onerror="this.classList.add('error');this.nextElementSibling.style.display='flex'">
+                        <div class="logo-fallback">Logo 2</div>
+                    </div>
+                </div>
+                <div class="brand-text">
+                    <span class="title">
+                        <span class="zh"> 定价小助手</span>
+                        <span class="pt"> Calc. Preços</span>
+                    </span>
+                    <span class="subtitle">
+                        <span class="zh">四档 · 整包换算 · </span>
+                        <span class="pt">4 Níveis · Conversão · </span>
+                    </span>
+                </div>
+            </div>
+            <div class="lang-toggle">
+                <button id="langZh">中文</button>
+                <button id="langPt" class="active">PT</button>
+            </div>
+        </div>
+
+        <!-- ===== 控制区 ===== -->
+        <div class="control-grid">
+            <div class="field">
+                <label><span class="zh">📦 产品</span><span class="pt">📦 Produto</span></label>
+                <select id="productSelect"></select>
+            </div>
+            <div class="field">
+                <label><span class="zh">📦 整包成本(R$)</span><span class="pt">📦 Custo pacote(R$)</span></label>
+                <input type="number" id="packCostInput" class="price-input" value="0.00" step="any" min="0">
+            </div>
+            <div class="field">
+                <label><span class="zh">🔢 每包数量</span><span class="pt">🔢 Qtd./pacote</span></label>
+                <input type="number" id="packQtyInput" class="price-input" value="12" step="1" min="1">
+                <span class="unit-hint"><span class="zh">每包含多少个单品</span><span class="pt">Itens por pacote</span></span>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-outline" id="resetBtn"><span class="zh">↺ 重置</span><span class="pt">↺ Reiniciar</span></button>
+            </div>
+        </div>
+
+        <!-- ===== 单位换算信息 ===== -->
+        <div class="unit-info">
+            <span class="zh">📦 整包</span><span class="pt">📦 Pacote</span>
+            <span id="displayPackCost">0.00</span>
+            <span class="zh">÷</span><span class="pt">÷</span>
+            <span id="displayPackQty">12</span>
+            <span class="zh">= 原始</span><span class="pt">= Orig.</span>
+            <span class="original-cost"><span class="orig-val" id="displayOriginalCost">8.3333</span></span>
+            <span class="zh">→ </span><span class="pt">→ </span>
+            <span class="single-cost" id="displaySingleCost">R$ </span>
+        </div>
+
+        <!-- ===== 四档卡片 ===== -->
+        <div class="quadrant" id="quadrantContainer">
+            <!-- A档 橙色 -->
+            <div class="level-card orange" data-level="A">
+                <div class="level-label"> Nívei A</div>
+                <div class="level-multiplier" id="multiplierA">
+                    <span class="zh">倍率</span><span class="pt">Mult.</span> <span class="actual" id="multA">3.0</span>x
+                    <span class="original" id="multA_original">(orig.3.0x)</span>
+                </div>
+                <div class="level-price"><span class="currency">R$</span> <span id="priceA">0.00</span></div>
+                <div class="level-desc"><span class="zh">最高</span><span class="pt">Máx</span></div>
+                <div class="rule-badge" id="ruleA">⚡ <span class="zh">原始</span><span class="pt">Orig.</span></div>
+            </div>
+            <!-- B档 蓝色 -->
+            <div class="level-card blue" data-level="B">
+                <div class="level-label"> Nívei B</div>
+                <div class="level-multiplier" id="multiplierB">
+                    <span class="zh">倍率</span><span class="pt">Mult.</span> <span class="actual" id="multB">2.8</span>x
+                    <span class="original" id="multB_original">(orig.2.8x)</span>
+                </div>
+                <div class="level-price"><span class="currency">R$</span> <span id="priceB">0.00</span></div>
+                <div class="level-desc"><span class="zh">推荐</span><span class="pt">Rec.</span></div>
+                <div class="rule-badge" id="ruleB">⚡ <span class="zh">原始</span><span class="pt">Orig.</span></div>
+            </div>
+            <!-- C档 绿色 -->
+            <div class="level-card green" data-level="C">
+                <div class="level-label"> Nívei C</div>
+                <div class="level-multiplier" id="multiplierC">
+                    <span class="zh">倍率</span><span class="pt">Mult.</span> <span class="actual" id="multC">2.5</span>x
+                    <span class="original" id="multC_original">(orig.2.5x)</span>
+                </div>
+                <div class="level-price"><span class="currency">R$</span> <span id="priceC">0.00</span></div>
+                <div class="level-desc"><span class="zh">中档</span><span class="pt">Méd.</span></div>
+                <div class="rule-badge" id="ruleC">⚡ <span class="zh">原始</span><span class="pt">Orig.</span></div>
+            </div>
+            <!-- D档 灰色 -->
+            <div class="level-card gray" data-level="D">
+                <div class="level-label">Nívei D</div>
+                <div class="level-multiplier" id="multiplierD">
+                    <span class="zh">倍率</span><span class="pt">Mult.</span> <span class="actual" id="multD">2.2</span>x
+                    <span class="original" id="multD_original">(orig.2.2x)</span>
+                </div>
+                <div class="level-price"><span class="currency">R$</span> <span id="priceD">0.00</span></div>
+                <div class="level-desc"><span class="zh">基础</span><span class="pt">Bás.</span></div>
+                <div class="rule-badge" id="ruleD">⚡ <span class="zh">原始</span><span class="pt">Orig.</span></div>
+            </div>
+        </div>
+
+        <!-- ===== 底部 ===== -->
+        <div class="footer">
+            <div class="footer-row">
+                <span class="badge"><span class="zh">📋 32 种</span><span class="pt">📋 32 prod.</span></span>
+                <span class="rule-hint">     
+                </span>
+            </div>
+            <div class="footer-row">
+                <span id="currentProductDisplay">
+                    <span class="zh"> · 单个 R$ </span>
+                    <span class="pt">. · Unit. R$</span>
+                </span>
+                <span class="rule-hint">
+                    <span class="zh">📌 整包÷数量
+                    <span class="pt">📌 Pacote÷qtd
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ===== 语言切换 =====
+            const langZh = document.getElementById('langZh');
+            const langPt = document.getElementById('langPt');
+
+            document.body.classList.remove('lang-zh');
+            langPt.classList.add('active');
+            langZh.classList.remove('active');
+
+            langZh.addEventListener('click', function() {
+                document.body.classList.add('lang-zh');
+                document.body.classList.remove('lang-pt');
+                langZh.classList.add('active');
+                langPt.classList.remove('active');
+                updateProductOptions();
+            });
+            langPt.addEventListener('click', function() {
+                document.body.classList.remove('lang-zh');
+                document.body.classList.remove('lang-pt');
+                langPt.classList.add('active');
+                langZh.classList.remove('active');
+                updateProductOptions();
+            });
+
+            // ===== 五入函数 =====
+            function roundUpToQuarter(value) {
+                if (value <= 0) return 0;
+                const rounded = Math.ceil(value * 4) / 4;
+                return Math.round(rounded * 10000) / 10000;
+            }
+
+            // ===== 货品名称 =====
+            const PRODUCT_NAMES = {
+                "首饰": { pt: "Bijuteria" },
+                "头饰": { pt: "Aces Cabelo " },
+                "文具": { pt: "Papelaria" },
+                "开水瓶": { pt: "Garrafa térmica" },
+                "玩具": { pt: "Brinquedos" },
+                "玩偶": { pt: "Bonecas" },
+                "狗玩具": { pt: "Brinquedos cães" },
+                "钥匙扣": { pt: "Chaveiros" },
+                "香水": { pt: "Perfumes" },
+                "化妆棉": { pt: "Algodão cosm." },
+                "洞洞鞋": { pt: "Crocs" },
+                "甲片": { pt: "Unhas postiças" },
+                "化妆刷": { pt: "Pincéis maq." },
+                "睫毛": { pt: "Cílios post." },
+                "电器大电器": { pt: "Eletrodom." },
+                "家居用品": { pt: "Artigos casa" },
+                "零食": { pt: "Alimento" },
+                "眼镜": { pt: "Óculos" },
+                "手表": { pt: "Relógios" },
+                "化妆品": { pt: "Cosméticos" },
+                "指甲油": { pt: "Esmaltes" },
+                "包包": { pt: "Bolsas" },
+                "书包": { pt: "Mochilas" },
+                "钱包": { pt: "Carteiras" },
+                "胸罩": { pt: "Sutiãs" },
+                "袜子": { pt: "Meias" },
+                "皮带": { pt: "Cintos" },
+                "行李箱": { pt: "Malas" },
+                "装饰品": { pt: "Decorações" },
+                "数据线": { pt: "Cabos dados" },
+                "手机壳": { pt: "Capas celular" }
+            };
+
+            function getProductDisplayName(name) {
+                const isPt = !document.body.classList.contains('lang-zh');
+                if (isPt && PRODUCT_NAMES[name]) {
+                    return PRODUCT_NAMES[name].pt;
+                }
+                return name;
+            }
+
+            // ===== 原始数据 =====
+            const PRODUCTS = [
+                { name: "首饰", A: 3.5, B: 3, C: 2.5, D: 2 },
+                { name: "头饰", A: 3, B: 2.8, C: 2.5, D: 2.2 },
+                { name: "文具", A: 3, B: 3, C: 2.8, D: 2.5 },
+                { name: "开水瓶", A: 3, B: 3, C: 2.5, D: 2.2 },
+                { name: "玩具", A: 3.5, B: 3, C: 2.5, D: 2.2 },
+                { name: "玩偶", A: 3, B: 3, C: 2.5, D: 2.2 },
+                { name: "狗玩具", A: 3.5, B: 3, C: 3, D: 2.5 },
+                { name: "钥匙扣", A: 4, B: 3.5, C: 3, D: 2.5 },
+                { name: "香水", A: 3, B: 3, C: 2.5, D: 2.2 },
+                { name: "化妆棉", A: 4, B: 3, C: 3, D: 2.5 },
+                { name: "洞洞鞋", A: 3, B: 3, C: 3, D: 2.5 },
+                { name: "甲片", A: 3.5, B: 3, C: 3, D: 2.5 },
+                { name: "化妆刷", A: 4, B: 4, C: 4, D: 3 },
+                { name: "睫毛", A: 3, B: 3, C: 2.8, D: 2.5 },
+                { name: "电器大电器", A: 3, B: 2.5, C: 2.2, D: 2 },
+                { name: "家居用品", A: 3, B: 2.5, C: 2.2, D: 2.2 },
+                { name: "零食", A: 2.2, B: 2, C: 2, D: 1.8 },
+                { name: "眼镜", A: 5, B: 4.5, C: 4, D: 3.5 },
+                { name: "手表", A: 4, B: 3.5, C: 3, D: 2 },
+                { name: "化妆品", A: 3, B: 2.8, C: 2.5, D: 2 },
+                { name: "指甲油", A: 2, B: 2, C: 2, D: 2 },
+                { name: "包包", A: 3, B: 2.5, C: 2.2, D: 2 },
+                { name: "书包", A: 3, B: 2.5, C: 2.2, D: 1.8 },
+                { name: "钱包", A: 3, B: 2.8, C: 2.5, D: 2.2 },
+                { name: "胸罩", A: 3, B: 2.8, C: 2.5, D: 1.8 },
+                { name: "袜子", A: 3.2, B: 3, C: 2.8, D: 2.5 },
+                { name: "皮带", A: 3.2, B: 3, C: 2.8, D: 1.8 },
+                { name: "行李箱", A: 2.5, B: 2.2, C: 2, D: 1.8 },
+                { name: "化妆品", A: 3, B: 2.8, C: 2.5, D: 2.2 },
+                { name: "装饰品", A: 3.2, B: 3, C: 2.8, D: 2.5 },
+                { name: "数据线", A: 5, B: 4.5, C: 4, D: 3 },
+                { name: "手机壳", A: 5, B: 4.5, C: 4, D: 3 }
+            ];
+
+            // ===== DOM =====
+            const productSelect = document.getElementById('productSelect');
+            const packCostInput = document.getElementById('packCostInput');
+            const packQtyInput = document.getElementById('packQtyInput');
+            const displayPackCost = document.getElementById('displayPackCost');
+            const displayPackQty = document.getElementById('displayPackQty');
+            const displayOriginalCost = document.getElementById('displayOriginalCost');
+            const displaySingleCost = document.getElementById('displaySingleCost');
+            const resetBtn = document.getElementById('resetBtn');
+            const currentProductDisplay = document.getElementById('currentProductDisplay');
+
+            const priceElements = {
+                A: document.getElementById('priceA'),
+                B: document.getElementById('priceB'),
+                C: document.getElementById('priceC'),
+                D: document.getElementById('priceD')
+            };
+            const multElements = {
+                A: document.getElementById('multA'),
+                B: document.getElementById('multB'),
+                C: document.getElementById('multC'),
+                D: document.getElementById('multD')
+            };
+            const multOriginal = {
+                A: document.getElementById('multA_original'),
+                B: document.getElementById('multB_original'),
+                C: document.getElementById('multC_original'),
+                D: document.getElementById('multD_original')
+            };
+            const ruleElements = {
+                A: document.getElementById('ruleA'),
+                B: document.getElementById('ruleB'),
+                C: document.getElementById('ruleC'),
+                D: document.getElementById('ruleD')
+            };
+
+            // ===== 填充下拉 =====
+            const uniqueNames = [];
+            const nameSet = new Set();
+            PRODUCTS.forEach(p => {
+                if (!nameSet.has(p.name)) {
+                    nameSet.add(p.name);
+                    uniqueNames.push(p.name);
+                }
+            });
+            uniqueNames.sort((a, b) => a.localeCompare(b, 'zh-Hans-CN', { sensitivity: 'accent' }));
+
+            function updateProductOptions() {
+                const currentValue = productSelect.value;
+                productSelect.innerHTML = '';
+                uniqueNames.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = getProductDisplayName(name);
+                    productSelect.appendChild(option);
+                });
+                if (currentValue && uniqueNames.includes(currentValue)) {
+                    productSelect.value = currentValue;
+                } else {
+                    productSelect.value = '头饰';
+                }
+                updateCurrentProductDisplay();
+            }
+
+            function updateCurrentProductDisplay() {
+                const product = productSelect.value;
+                const singleCost = getSingleCost();
+                const roundedCost = roundUpToQuarter(singleCost);
+                const displayName = getProductDisplayName(product);
+                const isPt = !document.body.classList.contains('lang-zh');
+                const costStr = `R$ ${roundedCost.toFixed(2)}`;
+                if (isPt) {
+                    currentProductDisplay.innerHTML =
+                        `<span class="pt">${displayName} · Unit. ${costStr}</span><span class="zh">${product} · 单个 ${costStr}</span>`;
+                } else {
+                    currentProductDisplay.innerHTML =
+                        `<span class="zh">${product} · 单个 ${costStr}</span><span class="pt">${displayName} · Unit. ${costStr}</span>`;
+                }
+            }
+
+            function getMultiplier(productName, level) {
+                const found = PRODUCTS.find(p => p.name === productName);
+                if (!found) return 1;
+                if (level === 'A') return found.A;
+                if (level === 'B') return found.B;
+                if (level === 'C') return found.C;
+                if (level === 'D') return found.D;
+                return 1;
+            }
+
+            function getSingleCost() {
+                const packCost = parseFloat(packCostInput.value.replace(',', '.'));
+                const packQty = parseInt(packQtyInput.value);
+                if (isNaN(packCost) || packCost < 0) return 0;
+                if (isNaN(packQty) || packQty < 1) return 0;
+                return packCost / packQty;
+            }
+
+            function calculatePrice(cost, productName, level, originalMultiplier) {
+                let finalMultiplier = originalMultiplier;
+                let ruleLabel = '原始倍率';
+                let ruleLabelPt = 'Mult. orig.';
+
+                if (level === 'A') {
+                    let ruleApplied = false;
+                    if (cost >= 100) { finalMultiplier = 2.2;
+                        ruleLabel = '全局 ≥100×2.2';
+                        ruleLabelPt = 'Geral ≥100×2.2';
+                        ruleApplied = true; } else if (!ruleApplied && productName === '玩具' && cost >= 70) { finalMultiplier =
+                            2.2;
+                        ruleLabel = '玩具 ≥70×2.2';
+                        ruleLabelPt = 'Brinq. ≥70×2.2';
+                        ruleApplied = true; } else if (!ruleApplied && cost >= 50) { finalMultiplier = 2.7;
+                        ruleLabel = '全局 ≥50×2.7';
+                        ruleLabelPt = 'Geral ≥50×2.7';
+                        ruleApplied = true; } else if (!ruleApplied && productName === '玩具' && cost >= 20) { finalMultiplier =
+                            2.8;
+                        ruleLabel = '玩具 ≥20×2.8';
+                        ruleLabelPt = 'Brinq. ≥20×2.8';
+                        ruleApplied = true; }
+                    if (!ruleApplied && productName === '头饰') {
+                        if (cost <= 2.5) { finalMultiplier = 4.2;
+                            ruleLabel = '头饰 ≤2.5×4.2';
+                            ruleLabelPt = 'Acess. ≤2.5×4.2'; } else if (cost >= 8.00) { finalMultiplier = 2.8;
+                            ruleLabel = '头饰 ≥8.00×2.8';
+                            ruleLabelPt = 'Acess. ≥8.00×2.8'; }
+                    }
+                }
+
+                if (level === 'B') {
+                    let ruleApplied = false;
+                    if (cost >= 100) { finalMultiplier = 2;
+                        ruleLabel = '全局 ≥100×2';
+                        ruleLabelPt = 'Geral ≥100×2';
+                        ruleApplied = true; } else if (!ruleApplied && productName === '玩具' && cost >= 70) { finalMultiplier =
+                            2;
+                        ruleLabel = '玩具 ≥70×2';
+                        ruleLabelPt = 'Brinq. ≥70×2';
+                        ruleApplied = true; } else if (!ruleApplied && cost >= 50) { finalMultiplier = 2.5;
+                        ruleLabel = '全局 ≥50×2.5';
+                        ruleLabelPt = 'Geral ≥50×2.5';
+                        ruleApplied = true; } else if (!ruleApplied && productName === '玩具' && cost >= 20) { finalMultiplier =
+                            2.5;
+                        ruleLabel = '玩具 ≥20×2.5';
+                        ruleLabelPt = 'Brinq. ≥20×2.5';
+                        ruleApplied = true; }
+                    if (!ruleApplied && productName === '头饰') {
+                        if (cost <= 2.5) { finalMultiplier = 4;
+                            ruleLabel = '头饰 ≤2.5×4';
+                            ruleLabelPt = 'Acess. ≤2.5×4'; } else if (cost >= 8.00) { finalMultiplier = 2.5;
+                            ruleLabel = '头饰 ≥8.00×2.5';
+                            ruleLabelPt = 'Acess. ≥8.00×2.5'; }
+                    }
+                }
+
+                if (level === 'C') {
+                    let ruleApplied = false;
+                    if (cost >= 100) { finalMultiplier = 1.8;
+                        ruleLabel = '全局 ≥100×1.8';
+                        ruleLabelPt = 'Geral ≥100×1.8';
+                        ruleApplied = true; } else if (!ruleApplied && productName === '玩具' && cost >= 70) { finalMultiplier =
+                            2;
+                        ruleLabel = '玩具 ≥70×2';
+                        ruleLabelPt = 'Brinq. ≥70×2';
+                        ruleApplied = true; } else if (!ruleApplied && cost >= 50) { finalMultiplier = 2.2;
+                        ruleLabel = '全局 ≥50×2.2';
+                        ruleLabelPt = 'Geral ≥50×2.2';
+                        ruleApplied = true; } else if (!ruleApplied && productName === '玩具' && cost >= 20) { finalMultiplier =
+                            2.2;
+                        ruleLabel = '玩具 ≥20×2.2';
+                        ruleLabelPt = 'Brinq. ≥20×2.2';
+                        ruleApplied = true; }
+                    if (!ruleApplied && productName === '头饰') {
+                        if (cost <= 2.5) { finalMultiplier = 3.8;
+                            ruleLabel = '头饰 ≤2.5×3.8';
+                            ruleLabelPt = 'Acess. ≤2.5×3.8'; } else if (cost >= 8.00) { finalMultiplier = 2.2;
+                            ruleLabel = '头饰 ≥8.00×2.2';
+                            ruleLabelPt = 'Acess. ≥8.00×2.2'; }
+                    }
+                }
+
+                if (level === 'D') {
+                    let ruleApplied = false;
+                    if (cost >= 100) { finalMultiplier = 1.6;
+                        ruleLabel = '全局 ≥100×1.6';
+                        ruleLabelPt = 'Geral ≥100×1.6';
+                        ruleApplied = true; } else if (!ruleApplied && productName === '玩具' && cost >= 70) { finalMultiplier =
+                            1.8;
+                        ruleLabel = '玩具 ≥70×1.8';
+                        ruleLabelPt = 'Brinq. ≥70×1.8';
+                        ruleApplied = true; } else if (!ruleApplied && cost >= 50) { finalMultiplier = 2;
+                        ruleLabel = '全局 ≥50×2';
+                        ruleLabelPt = 'Geral ≥50×2';
+                        ruleApplied = true; } else if (!ruleApplied && productName === '玩具' && cost >= 20) { finalMultiplier =
+                            2;
+                        ruleLabel = '玩具 ≥20×2';
+                        ruleLabelPt = 'Brinq. ≥20×2';
+                        ruleApplied = true; }
+                    if (!ruleApplied && productName === '头饰') {
+                        if (cost <= 2.5) { finalMultiplier = 3.5;
+                            ruleLabel = '头饰 ≤2.5×3.5';
+                            ruleLabelPt = 'Acess. ≤2.5×3.5'; } else if (cost >= 8.00) { finalMultiplier = 2;
+                            ruleLabel = '头饰 ≥8.00×2';
+                            ruleLabelPt = 'Acess. ≥8.00×2'; }
+                    }
+                }
+
+                const finalPrice = cost * finalMultiplier;
+                return { finalPrice, finalMultiplier, ruleLabel, ruleLabelPt };
+            }
+
+            function updateAllPrices() {
+                const product = productSelect.value;
+                const originalCost = getSingleCost();
+                const roundedCost = roundUpToQuarter(originalCost);
+
+                const packCost = parseFloat(packCostInput.value.replace(',', '.')) || 0;
+                const packQty = parseInt(packQtyInput.value) || 0;
+                displayPackCost.textContent = packCost.toFixed(2);
+                displayPackQty.textContent = packQty;
+                displayOriginalCost.textContent = originalCost.toFixed(4);
+                displaySingleCost.textContent = `R$ ${roundedCost.toFixed(2)}`;
+
+                const multA = getMultiplier(product, 'A');
+                const multB = getMultiplier(product, 'B');
+                const multC = getMultiplier(product, 'C');
+                const multD = getMultiplier(product, 'D');
+
+                const resultA = calculatePrice(roundedCost, product, 'A', multA);
+                const resultB = calculatePrice(roundedCost, product, 'B', multB);
+                const resultC = calculatePrice(roundedCost, product, 'C', multC);
+                const resultD = calculatePrice(roundedCost, product, 'D', multD);
+
+                priceElements.A.textContent = resultA.finalPrice.toFixed(2);
+                priceElements.B.textContent = resultB.finalPrice.toFixed(2);
+                priceElements.C.textContent = resultC.finalPrice.toFixed(2);
+                priceElements.D.textContent = resultD.finalPrice.toFixed(2);
+
+                const isARule = resultA.ruleLabel !== '原始倍率';
+                multElements.A.textContent = resultA.finalMultiplier.toFixed(1);
+                multOriginal.A.textContent = isARule ? `(orig.${multA.toFixed(1)}x)` : '';
+                multOriginal.A.style.display = isARule ? 'inline' : 'none';
+
+                const isBRule = resultB.ruleLabel !== '原始倍率';
+                multElements.B.textContent = resultB.finalMultiplier.toFixed(1);
+                multOriginal.B.textContent = isBRule ? `(orig.${multB.toFixed(1)}x)` : '';
+                multOriginal.B.style.display = isBRule ? 'inline' : 'none';
+
+                const isCRule = resultC.ruleLabel !== '原始倍率';
+                multElements.C.textContent = resultC.finalMultiplier.toFixed(1);
+                multOriginal.C.textContent = isCRule ? `(orig.${multC.toFixed(1)}x)` : '';
+                multOriginal.C.style.display = isCRule ? 'inline' : 'none';
+
+                const isDRule = resultD.ruleLabel !== '原始倍率';
+                multElements.D.textContent = resultD.finalMultiplier.toFixed(1);
+                multOriginal.D.textContent = isDRule ? `(orig.${multD.toFixed(1)}x)` : '';
+                multOriginal.D.style.display = isDRule ? 'inline' : 'none';
+
+                const isPt = !document.body.classList.contains('lang-zh');
+                const ruleA = resultA.ruleLabel === '原始倍率' ? (isPt ? 'Orig.' : '原始') : resultA.ruleLabel + (isPt ? '' :
+                    ' / ' + resultA.ruleLabelPt);
+                const ruleB = resultB.ruleLabel === '原始倍率' ? (isPt ? 'Orig.' : '原始') : resultB.ruleLabel + (isPt ? '' :
+                    ' / ' + resultB.ruleLabelPt);
+                const ruleC = resultC.ruleLabel === '原始倍率' ? (isPt ? 'Orig.' : '原始') : resultC.ruleLabel + (isPt ? '' :
+                    ' / ' + resultC.ruleLabelPt);
+                const ruleD = resultD.ruleLabel === '原始倍率' ? (isPt ? 'Orig.' : '原始') : resultD.ruleLabel + (isPt ? '' :
+                    ' / ' + resultD.ruleLabelPt);
+
+                ruleElements.A.textContent = '⚡ ' + ruleA;
+                ruleElements.B.textContent = '⚡ ' + ruleB;
+                ruleElements.C.textContent = '⚡ ' + ruleC;
+                ruleElements.D.textContent = '⚡ ' + ruleD;
+
+                document.querySelector('[data-level="A"]').style.borderColor = isARule ? '#f59e0b' : 'rgba(0,150,136,0.08)';
+                document.querySelector('[data-level="B"]').style.borderColor = isBRule ? '#3b82f6' : 'rgba(0,150,136,0.08)';
+                document.querySelector('[data-level="C"]').style.borderColor = isCRule ? '#10b981' : 'rgba(0,150,136,0.08)';
+                document.querySelector('[data-level="D"]').style.borderColor = isDRule ? '#9ca3af' : 'rgba(0,150,136,0.08)';
+
+                const displayName = getProductDisplayName(product);
+                const costStr = `R$ ${roundedCost.toFixed(2)}`;
+                if (isPt) {
+                    currentProductDisplay.innerHTML =
+                        `<span class="pt">${displayName} · Unit. ${costStr}</span><span class="zh">${product} · 单个 ${costStr}</span>`;
+                } else {
+                    currentProductDisplay.innerHTML =
+                        `<span class="zh">${product} · 单个 ${costStr}</span><span class="pt">${displayName} · Unit. ${costStr}</span>`;
+                }
+            }
+
+            function resetToDefault() {
+                for (let i = 0; i < productSelect.options.length; i++) {
+                    if (productSelect.options[i].value === '头饰') {
+                        productSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+                packCostInput.value = '0.00';
+                packQtyInput.value = '1';
+                updateAllPrices();
+            }
+
+            resetBtn.addEventListener('click', resetToDefault);
+            productSelect.addEventListener('change', updateAllPrices);
+
+            packCostInput.addEventListener('input', function() { updateAllPrices(); });
+            packQtyInput.addEventListener('input', function() { updateAllPrices(); });
+
+            packCostInput.addEventListener('blur', function() {
+                const val = this.value.replace(',', '.');
+                const num = parseFloat(val);
+                if (!isNaN(num) && num >= 0) { this.value = num.toFixed(2); } else if (val.trim() === '' || val === '-') { this
+                        .value = '0.00'; } else {
+                    const cleaned = val.replace(/[^0-9.]/g, '');
+                    const parsed = parseFloat(cleaned);
+                    this.value = (!isNaN(parsed) && parsed >= 0) ? parsed.toFixed(2) : '0.00';
+                }
+                updateAllPrices();
+            });
+
+            packQtyInput.addEventListener('blur', function() {
+                const val = parseInt(this.value);
+                if (isNaN(val) || val < 1) { this.value = '1'; } else { this.value = val; }
+                updateAllPrices();
+            });
+
+            updateProductOptions();
+            resetToDefault();
+        })();
+    </script>
+</body>
+</html>

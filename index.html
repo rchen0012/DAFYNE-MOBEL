@@ -752,7 +752,7 @@
         <div class="quadrant" id="quadrantContainer">
             <!-- A档 橙色 -->
             <div class="level-card orange" data-level="A">
-                <div class="level-label"> Nívei A</div>
+                <div class="level-label"> Nível A</div>
                 <div class="level-multiplier" id="multiplierA">
                     <span class="zh">倍率</span><span class="pt">Mult.</span> <span class="actual" id="multA">3.0</span>x
                     <span class="original" id="multA_original">(orig.3.0x)</span>
@@ -763,7 +763,7 @@
             </div>
             <!-- B档 蓝色 -->
             <div class="level-card blue" data-level="B">
-                <div class="level-label"> Nívei B</div>
+                <div class="level-label"> Nível B</div>
                 <div class="level-multiplier" id="multiplierB">
                     <span class="zh">倍率</span><span class="pt">Mult.</span> <span class="actual" id="multB">2.8</span>x
                     <span class="original" id="multB_original">(orig.2.8x)</span>
@@ -774,7 +774,7 @@
             </div>
             <!-- C档 绿色 -->
             <div class="level-card green" data-level="C">
-                <div class="level-label"> Nívei C</div>
+                <div class="level-label"> Nível C</div>
                 <div class="level-multiplier" id="multiplierC">
                     <span class="zh">倍率</span><span class="pt">Mult.</span> <span class="actual" id="multC">2.5</span>x
                     <span class="original" id="multC_original">(orig.2.5x)</span>
@@ -785,7 +785,7 @@
             </div>
             <!-- D档 灰色 -->
             <div class="level-card gray" data-level="D">
-                <div class="level-label">Nívei D</div>
+                <div class="level-label">Nível D</div>
                 <div class="level-multiplier" id="multiplierD">
                     <span class="zh">倍率</span><span class="pt">Mult.</span> <span class="actual" id="multD">2.2</span>x
                     <span class="original" id="multD_original">(orig.2.2x)</span>
@@ -841,11 +841,10 @@
                 updateProductOptions();
             });
 
-            // ===== 五入函数 =====
-            function roundUpToQuarter(value) {
+            // ===== 五入函数（保留两位小数，符合金额习惯） =====
+            function roundToTwo(value) {
                 if (value <= 0) return 0;
-                const rounded = Math.ceil(value * 4) / 4;
-                return Math.round(rounded * 10000) / 10000;
+                return Math.round(value * 100) / 100;
             }
 
             // ===== 货品名称 =====
@@ -994,7 +993,7 @@
             function updateCurrentProductDisplay() {
                 const product = productSelect.value;
                 const singleCost = getSingleCost();
-                const roundedCost = roundUpToQuarter(singleCost);
+                const roundedCost = roundToTwo(singleCost);
                 const displayName = getProductDisplayName(product);
                 const isPt = !document.body.classList.contains('lang-zh');
                 const costStr = `R$ ${roundedCost.toFixed(2)}`;
@@ -1141,7 +1140,7 @@
             function updateAllPrices() {
                 const product = productSelect.value;
                 const originalCost = getSingleCost();
-                const roundedCost = roundUpToQuarter(originalCost);
+                const roundedCost = roundToTwo(originalCost);
 
                 const packCost = parseFloat(packCostInput.value.replace(',', '.')) || 0;
                 const packQty = parseInt(packQtyInput.value) || 0;
